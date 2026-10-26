@@ -1,31 +1,28 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   ArrowUpRight,
-  Bot,
   CalendarDays,
   Code2,
   Database,
   Github,
-  Lightbulb,
   Linkedin,
-  LayoutTemplate,
   Mail,
   Moon,
   Radio,
-  Rocket,
-  ServerCog,
   Sparkles,
   Sun,
   TerminalSquare,
   X
 } from "lucide-react";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import GrainShaderBackground from "./GrainShaderBackground";
+import WorkflowCanvasHero from "./WorkflowCanvasHero";
 
 type Project = {
   id: string;
@@ -47,6 +44,7 @@ type Tab = "Overview" | "Architecture" | "Features" | "Links";
 const navItems = ["Projects", "Skills", "Experience", "Research", "Blog"];
 const pendingUrl = "javascript:void(0)";
 const scheduleUrl = "https://cal.com/amlan-bora";
+const loaderWord = "AMLAN.LIVE";
 
 const projects: Project[] = [
   {
@@ -156,12 +154,12 @@ const skillPillars = [
   },
   {
     title: "Backend Systems",
-    body: "Node, Express, Bun, Prisma, PostgreSQL, Supabase, rate limits, and protected APIs.",
+    body: "Node.js, Express, Bun, Hono, Prisma, Drizzle, PostgreSQL, and Supabase.",
     icon: Database
   },
   {
-    title: "UI Engineering",
-    body: "Responsive product interfaces, interaction systems, animation polish, and design taste.",
+    title: "Design Engineering",
+    body: "UI/UX and product design, user flows, interaction and visual systems, rapid prototyping, and polished responsive interfaces.",
     icon: Radio
   },
   {
@@ -180,63 +178,6 @@ const stackMatrix = [
   ["Tools", "Git", "GitHub", "Docker", "Vercel", "AWS", "n8n"]
 ];
 
-const workflowSteps = [
-  {
-    title: "Brief",
-    summary: "Turn the rough idea into product intent.",
-    detail: "Audience, promise, constraints",
-    artifact: "Product brief",
-    meta: "01 / Strategy",
-    step: 1,
-    icon: Lightbulb
-  },
-  {
-    title: "Flow",
-    summary: "Map the path a real user takes.",
-    detail: "Screens, states, decisions",
-    artifact: "UX map",
-    meta: "02 / Experience",
-    step: 2,
-    icon: LayoutTemplate
-  },
-  {
-    title: "Interface",
-    summary: "Design the product surface people trust.",
-    detail: "Responsive UI, motion, polish",
-    artifact: "Product screen",
-    meta: "03 / UI",
-    step: 3,
-    icon: Code2
-  },
-  {
-    title: "Systems",
-    summary: "Connect auth, APIs, data, and business logic.",
-    detail: "Node, Postgres, Supabase",
-    artifact: "Reliable backend",
-    meta: "04 / Engineering",
-    step: 4,
-    icon: ServerCog
-  },
-  {
-    title: "AI",
-    summary: "Add the workflows that make the product feel smart.",
-    detail: "Agents, RAG, streaming UX",
-    artifact: "AI workflow",
-    meta: "05 / Intelligence",
-    step: 5,
-    icon: Bot
-  },
-  {
-    title: "Launch",
-    summary: "Ship a usable product with production signals.",
-    detail: "Deploy, observe, improve",
-    artifact: "Live product",
-    meta: "06 / Production",
-    step: 6,
-    icon: Rocket
-  }
-];
-
 function MagneticButton({
   children,
   href,
@@ -250,58 +191,12 @@ function MagneticButton({
   variant?: "primary" | "secondary" | "ghost";
   className?: string;
 }) {
-  const ref = useRef<HTMLAnchorElement | HTMLButtonElement | null>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (
-      !el ||
-      matchMedia("(pointer: coarse)").matches ||
-      matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      return;
-    }
-
-    let bounds = el.getBoundingClientRect();
-    const xTo = gsap.quickTo(el, "x", { duration: 0.28, ease: "power3.out" });
-    const yTo = gsap.quickTo(el, "y", { duration: 0.28, ease: "power3.out" });
-
-    const onEnter = () => {
-      bounds = el.getBoundingClientRect();
-      el.classList.add("is-magnetic");
-    };
-
-    const onMove: EventListener = (event) => {
-      const pointerEvent = event as PointerEvent;
-      const x = pointerEvent.clientX - bounds.left - bounds.width / 2;
-      const y = pointerEvent.clientY - bounds.top - bounds.height / 2;
-      xTo(x * 0.22);
-      yTo(y * 0.22);
-    };
-
-    const onLeave = () => {
-      el.classList.remove("is-magnetic");
-      xTo(0);
-      yTo(0);
-    };
-
-    el.addEventListener("pointerenter", onEnter);
-    el.addEventListener("pointermove", onMove);
-    el.addEventListener("pointerleave", onLeave);
-    return () => {
-      el.removeEventListener("pointerenter", onEnter);
-      el.removeEventListener("pointermove", onMove);
-      el.removeEventListener("pointerleave", onLeave);
-    };
-  }, []);
-
   const classes = `magnetic ${variant} ${className}`;
 
   if (href) {
     const isExternal = href.startsWith("http");
     return (
       <a
-        ref={ref as React.MutableRefObject<HTMLAnchorElement>}
         className={classes}
         href={href}
         target={isExternal ? "_blank" : undefined}
@@ -313,63 +208,9 @@ function MagneticButton({
   }
 
   return (
-    <button ref={ref as React.MutableRefObject<HTMLButtonElement>} className={classes} onClick={onClick}>
+    <button className={classes} onClick={onClick}>
       {children}
     </button>
-  );
-}
-
-function CustomCursor() {
-  const dotRef = useRef<HTMLDivElement | null>(null);
-  const ringRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-    const coarsePointer = matchMedia("(pointer: coarse)");
-
-    if (reducedMotion.matches || coarsePointer.matches) return;
-
-    const dot = dotRef.current;
-    const ring = ringRef.current;
-    if (!dot || !ring) return;
-
-    document.documentElement.classList.add("custom-cursor-enabled");
-
-    gsap.set([dot, ring], { x: -100, y: -100, xPercent: -50, yPercent: -50, opacity: 1 });
-    const dotX = gsap.quickSetter(dot, "x", "px");
-    const dotY = gsap.quickSetter(dot, "y", "px");
-    const ringX = gsap.quickTo(ring, "x", { duration: 0.18, ease: "power2.out" });
-    const ringY = gsap.quickTo(ring, "y", { duration: 0.18, ease: "power2.out" });
-
-    const move = (event: PointerEvent) => {
-      dotX(event.clientX);
-      dotY(event.clientY);
-      ringX(event.clientX);
-      ringY(event.clientY);
-    };
-
-    const setHover = (event: PointerEvent) => {
-      const targetElement = event.target as Element | null;
-      const hovering = !!targetElement?.closest("button, a, [data-cursor='hover']");
-      dot.classList.toggle("hovering", hovering);
-      ring.classList.toggle("hovering", hovering);
-    };
-
-    window.addEventListener("pointermove", move, { passive: true });
-    window.addEventListener("pointerover", setHover, { passive: true });
-
-    return () => {
-      document.documentElement.classList.remove("custom-cursor-enabled");
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerover", setHover);
-    };
-  }, []);
-
-  return (
-    <>
-      <div ref={dotRef} className="cursor-dot" aria-hidden="true" />
-      <div ref={ringRef} className="cursor-ring" aria-hidden="true" />
-    </>
   );
 }
 
@@ -457,11 +298,12 @@ function useTelemetry() {
 export default function Portfolio() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [loaded, setLoaded] = useState(false);
+  const [typedLoaderWord, setTypedLoaderWord] = useState("");
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [activeSection, setActiveSection] = useState("Projects");
-  const [activeWorkflowStep, setActiveWorkflowStep] = useState(1);
-  const heroSystemRef = useRef<HTMLDivElement | null>(null);
+  const [istTime, setIstTime] = useState("--:--:--");
+  const [istDateTime, setIstDateTime] = useState("");
   const { stats, track } = useTelemetry();
 
   const contactLinks = useMemo(
@@ -478,72 +320,35 @@ export default function Portfolio() {
   }, [theme]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setLoaded(true), 1200);
-    return () => window.clearTimeout(timer);
-  }, []);
+    const formatter = new Intl.DateTimeFormat("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    });
+    const updateIstTime = () => {
+      const now = new Date();
+      setIstTime(formatter.format(now));
+      setIstDateTime(now.toISOString());
+    };
 
-  useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const timer = window.setInterval(() => {
-      setActiveWorkflowStep((step) => (step % workflowSteps.length) + 1);
-    }, 2200);
-
+    updateIstTime();
+    const timer = window.setInterval(updateIstTime, 1000);
     return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
-      const el = heroSystemRef.current;
-    if (
-      !el ||
-      matchMedia("(pointer: coarse)").matches ||
-      matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      return;
-    }
-
-    let frame = 0;
-
-    const resetDepth = () => {
-      cancelAnimationFrame(frame);
-      el.classList.remove("is-interacting");
-      el.style.setProperty("--tilt-x", "0deg");
-      el.style.setProperty("--tilt-y", "0deg");
-      el.style.setProperty("--drift-x", "0px");
-      el.style.setProperty("--drift-y", "0px");
-      el.style.setProperty("--spot-x", "74%");
-      el.style.setProperty("--spot-y", "30%");
-    };
-
-    const onMove: EventListener = (event) => {
-      const pointerEvent = event as PointerEvent;
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const rect = el.getBoundingClientRect();
-        const px = (pointerEvent.clientX - rect.left) / rect.width;
-        const py = (pointerEvent.clientY - rect.top) / rect.height;
-        const clampedX = Math.min(Math.max(px, 0), 1);
-        const clampedY = Math.min(Math.max(py, 0), 1);
-        const tiltY = (clampedX - 0.5) * 16;
-        const tiltX = (0.5 - clampedY) * 12;
-
-        el.classList.add("is-interacting");
-        el.style.setProperty("--tilt-x", `${tiltX.toFixed(2)}deg`);
-        el.style.setProperty("--tilt-y", `${tiltY.toFixed(2)}deg`);
-        el.style.setProperty("--drift-x", `${((clampedX - 0.5) * 10).toFixed(2)}px`);
-        el.style.setProperty("--drift-y", `${((clampedY - 0.5) * 8).toFixed(2)}px`);
-        el.style.setProperty("--spot-x", `${(clampedX * 100).toFixed(1)}%`);
-        el.style.setProperty("--spot-y", `${(clampedY * 100).toFixed(1)}%`);
-      });
-    };
-
-    el.addEventListener("pointermove", onMove, { passive: true });
-    el.addEventListener("pointerleave", resetDepth);
-
+    const characterTimers = loaderWord.split("").map((_, index) =>
+      window.setTimeout(
+        () => setTypedLoaderWord(loaderWord.slice(0, index + 1)),
+        100 + index * (1100 / 9)
+      )
+    );
+    const timer = window.setTimeout(() => setLoaded(true), 2450);
     return () => {
-      cancelAnimationFrame(frame);
-      el.removeEventListener("pointermove", onMove);
-      el.removeEventListener("pointerleave", resetDepth);
+      characterTimers.forEach((characterTimer) => window.clearTimeout(characterTimer));
+      window.clearTimeout(timer);
     };
   }, []);
 
@@ -591,48 +396,29 @@ export default function Portfolio() {
       );
     }
 
-    const cards = gsap.utils.toArray<HTMLElement>(".project-panel");
-    gsap.fromTo(
-      cards,
-      { y: 46, opacity: 0, rotateX: 4, scale: 0.97 },
-      {
-        y: 0,
-        opacity: 1,
-        rotateX: 0,
-        scale: 1,
-        duration: 0.82,
-        stagger: 0.08,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: projectSection,
-          start: "top 74%",
-          once: true
-        }
-      }
-    );
-
     const media = gsap.matchMedia();
-    media.add("(min-width: 981px) and (prefers-reduced-motion: no-preference)", () => {
-      const section = document.querySelector<HTMLElement>(".projects-section");
-      const sticky = document.querySelector<HTMLElement>(".projects-sticky");
-      const track = document.querySelector<HTMLElement>(".projects-track");
+    media.add("(prefers-reduced-motion: no-preference)", () => {
+      const stack = document.querySelector<HTMLElement>(".projects-stack");
+      const stackItems = gsap.utils.toArray<HTMLElement>(".project-stack-item");
 
-      if (!section || !sticky || !track) return;
+      if (!stack) return;
 
-      const getDistance = () => Math.max(0, track.scrollWidth - window.innerWidth + 48);
+      gsap.set(stackItems, { transformPerspective: 1200 });
 
-      gsap.to(track, {
-        x: () => -getDistance(),
-        ease: "none",
-        scrollTrigger: {
-          trigger: sticky,
-          start: "top top",
-          end: () => `+=${getDistance() + window.innerHeight * 0.5}`,
-          pin: sticky,
-          scrub: 0.8,
-          anticipatePin: 1,
-          invalidateOnRefresh: true
-        }
+      stackItems.slice(0, -1).forEach((card, index) => {
+        const scale = 1 - (stackItems.length - index - 1) * 0.05;
+
+        gsap.to(card, {
+          scale,
+          ease: "none",
+          scrollTrigger: {
+            trigger: stack,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 0.65,
+            invalidateOnRefresh: true
+          }
+        });
       });
     });
 
@@ -666,15 +452,16 @@ export default function Portfolio() {
       Math.max(y, window.innerHeight - y)
     );
 
-    const transition = (document as Document & { startViewTransition?: (callback: () => void) => void })
-      .startViewTransition;
+    const viewTransitionDocument = document as Document & {
+      startViewTransition?: (callback: () => void) => void;
+    };
 
-    if (!transition) {
+    if (!viewTransitionDocument.startViewTransition) {
       setTheme(nextTheme);
       return;
     }
 
-    transition(() => setTheme(nextTheme));
+    viewTransitionDocument.startViewTransition(() => setTheme(nextTheme));
     root.animate(
       {
         clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`]
@@ -693,18 +480,19 @@ export default function Portfolio() {
     track("project_open", project.id);
   };
 
-  const activeWorkflow =
-    workflowSteps.find((step) => step.step === activeWorkflowStep) || workflowSteps[0];
-  const ActiveWorkflowIcon = activeWorkflow.icon;
-
   return (
     <main>
-      <CustomCursor />
+      <GrainShaderBackground theme={theme} />
 
       {!loaded && (
         <div className="loader">
           <div className="loader-mark">
-            <span>AMLAN.LIVE</span>
+            <span className="loader-word-frame">
+              <span className="loader-word-spacer" aria-hidden="true">{loaderWord}</span>
+              <span className="loader-word" role="status" aria-label={loaderWord}>
+                <span aria-hidden="true">{typedLoaderWord}</span>
+              </span>
+            </span>
             <i />
           </div>
           <div className="loader-lines">
@@ -745,135 +533,76 @@ export default function Portfolio() {
         </div>
       </header>
 
-      <section id="home" className="hero section-shell">
-        <div className="hero-studio-backdrop" aria-hidden="true" />
+      <section
+        id="home"
+        className="hero hero-wide-shell section-shell grid grid-cols-1 items-center gap-y-10 pt-[140px] pb-14 lg:min-h-[min(820px,100svh)] lg:grid-cols-2 lg:gap-x-12 lg:gap-y-0 lg:pt-[124px] xl:gap-x-16"
+      >
         <div className="hero-ambient-glow" aria-hidden="true" />
-        <div className="hero-copy">
-          <p className="eyebrow hero-role-line">
-            <span className="role-token role-token-1">
-              <span className="mask"><span className="reveal">Full-stack AI developer</span></span>
-            </span>
-            <span aria-hidden="true">·</span>
-            <span className="role-token role-token-2">
-              <span className="mask"><span className="reveal">Software Engineer</span></span>
-            </span>
-            <span aria-hidden="true">·</span>
-            <span className="role-token role-token-3">
-              <span className="mask"><span className="reveal">Indie Hacker</span></span>
-            </span>
-          </p>
-          <h1>
-            <span className="mask"><span className="reveal">I build full stack products</span></span>
-            <span className="mask"><span className="reveal">that are ready to <span className="serif-emphasis">ship</span>.</span></span>
-          </h1>
-          <p className="hero-sub">
-            I turn ambiguous product ideas into polished interfaces, reliable backends, and
-            AI-powered workflows using Next.js, React, Node, PostgreSQL, Supabase, and modern LLM tooling.
-          </p>
-          <div className="hero-actions">
-            <MagneticButton href={scheduleUrl} className="hero-call-button">
-              Schedule call with me <CalendarDays size={19} />
-            </MagneticButton>
-            <MagneticButton href="#projects" variant="secondary">
-              View Work <ArrowUpRight size={18} />
-            </MagneticButton>
-            <div className="hero-proof" aria-label="Core strengths">
-              <span>AI apps</span>
-              <span>Realtime systems</span>
-              <span>SaaS MVPs</span>
+        <header className="hero-copy relative z-[1] flex w-full max-w-[540px] min-h-0 lg:min-h-[540px] flex-col justify-center justify-self-center lg:justify-self-start">
+          <div className="hero-message flex w-full flex-col">
+            <div className="hero-identity">
+              <span className="hero-avatar-frame">
+                <Image
+                  src="/assets/profilephoto-avatar.webp"
+                  alt="Portrait of Amlan"
+                  width={72}
+                  height={72}
+                  sizes="(max-width: 640px) 60px, 72px"
+                  className="hero-avatar hero-avatar--identity"
+                  priority
+                />
+              </span>
+              <div className="hero-identity-copy">
+                <strong>Amlan Bora</strong>
+                <p className="eyebrow hero-role-line">
+                  <span className="hero-code-symbol" aria-hidden="true">&gt;_</span>
+                  <span
+                    className="hero-role-typing"
+                    data-text="FULL-STACK AI ENGINEER"
+                    aria-label="FULL-STACK AI ENGINEER"
+                  >
+                    <span aria-hidden="true">FULL-STACK AI ENGINEER</span>
+                  </span>
+                </p>
+              </div>
             </div>
+            <h1 className="hero-headline">
+              <span className="mask"><span className="reveal">Turning ideas into</span></span>
+              <span className="mask"><span className="reveal">products that <span className="serif-emphasis">ship</span></span></span>
+            </h1>
+          </div>
+          <p className="hero-sub">
+            I collaborate with founders and product teams to design and build
+            full-stack and AI-powered products, from early concepts through launch.
+          </p>
+          <div className="hero-actions max-sm:flex-col max-sm:items-start">
+            <MagneticButton href={scheduleUrl} className="hero-call-button">
+              Book a free build call <CalendarDays size={19} />
+            </MagneticButton>
+            <MagneticButton href="#projects" variant="secondary" className="hero-work-button">
+              See recent work <ArrowUpRight size={18} />
+            </MagneticButton>
+          </div>
+          <div className="hero-proof" aria-label="Core strengths">
+            <span>web apps</span>
+            <span>SaaS MVPs</span>
+            <span>AI apps</span>
           </div>
           <div className="hero-status-strip" aria-label="Current status">
-            <span><i aria-hidden="true" /> Available · 2026</span>
-            <span>Guwahati, IN</span>
-            {/* TODO: Wire this to the GitHub events API once public activity is connected. */}
-            <span>Last shipped · 2 days ago</span>
-            <span>v3.0</span>
+            <span>
+              <i aria-hidden="true" />
+              <span className="hero-status-label">Available</span>
+              <time
+                className="hero-status-time"
+                dateTime={istDateTime}
+                suppressHydrationWarning
+              >
+                {istTime} IST
+              </time>
+            </span>
           </div>
-        </div>
-
-        <div ref={heroSystemRef} className="hero-system" aria-label="Interactive idea to product console">
-          <div className="product-console">
-            <div className="console-topbar">
-              <div>
-                <span className="online-dot" />
-                <code>idea-to-product.console</code>
-              </div>
-              <strong>{activeWorkflow.artifact}</strong>
-            </div>
-
-            <div className="console-workspace">
-              <div className="console-stage-strip" aria-label="Workflow stages">
-                {workflowSteps.map((step) => {
-                  const Icon = step.icon;
-                  const isActive = activeWorkflowStep === step.step;
-
-                  return (
-                    <button
-                      className={`console-step ${isActive ? "is-active" : ""}`}
-                      key={step.title}
-                      type="button"
-                      aria-pressed={isActive}
-                      onClick={() => setActiveWorkflowStep(step.step)}
-                      data-cursor="hover"
-                    >
-                      <span><Icon size={15} /></span>
-                      <strong>{step.title}</strong>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="console-product" data-active-step={activeWorkflowStep}>
-                <div className="console-product-glow" aria-hidden="true" />
-                <div className="console-journey">
-                  <div className="console-idea">
-                    <span>Raw idea</span>
-                    <p>“I need an AI product people can understand, trust, and actually use.”</p>
-                  </div>
-
-                  <div className="console-product-mark" aria-hidden="true">
-                    <span><ActiveWorkflowIcon size={22} /></span>
-                    <i />
-                  </div>
-
-                  <div className="console-screen">
-                    <div className="console-screen-top">
-                      <span />
-                      <span />
-                      <span />
-                      <strong>Live surface</strong>
-                    </div>
-                    <div className="console-screen-body">
-                      <div className="console-main">
-                        <div className="console-preview-head">
-                          <span>{activeWorkflow.meta}</span>
-                          <strong>{activeWorkflow.title}</strong>
-                          <p>{activeWorkflow.summary}</p>
-                        </div>
-                        <div className="console-ui-row is-primary">
-                          <i />
-                          <div>
-                            <strong>{activeWorkflow.artifact}</strong>
-                            <span>{activeWorkflow.detail}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="console-status">
-                  <span>Idea</span>
-                  <i />
-                  <span>System</span>
-                  <i />
-                  <span>Live</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        </header>
+        <WorkflowCanvasHero />
       </section>
 
       <section className="openflow section-shell">
@@ -897,79 +626,81 @@ export default function Portfolio() {
       <section id="projects" className="projects-section">
         <div className="section-intro section-shell">
           <p className="eyebrow">Selected work</p>
-          <h2><span className="mask"><span className="reveal">Three builds across AI search, realtime systems, and agent infrastructure.</span></span></h2>
-          <p className="projects-kicker">Scroll through a reel of production-minded builds, from live AI search to realtime collaboration and agent memory infrastructure.</p>
+          <h2><span className="mask"><span className="reveal">Some of my recent personal projects.</span></span></h2>
+          <p className="projects-kicker">
+            <span>Scroll through some of my recent work.</span>
+            <span>Some client projects aren&apos;t showcased here.</span>
+          </p>
         </div>
-        <div className="projects-reel">
-          <div className="projects-sticky">
-            <div className="projects-track">
+        <div className="projects-stack section-shell">
           {projects.map((project, index) => (
-            <article
-              className="project-panel"
+            <div
+              className="project-stack-item"
               key={project.id}
+              style={{ "--stack-index": index } as React.CSSProperties}
             >
-              <div className="project-index">0{index + 1}</div>
-              <div className="project-visual">
-                <div className="visual-topline">
-                  <span>{project.accent}</span>
-                  <code>{project.id}</code>
-                </div>
-                <h3 className="project-image-title">{project.title}</h3>
-                {project.image ? (
-                  <div className="project-image-wrap">
-                    <Image
-                      src={project.image}
-                      alt={`${project.title} project screenshot`}
-                      fill
-                      sizes="(max-width: 980px) 100vw, 40vw"
-                    />
+              <article className="project-panel">
+                <div className="project-visual">
+                  <div className="visual-topline">
+                    <span className="project-index">0{index + 1}</span>
+                    <span>{project.accent}</span>
+                    <code>{project.id}</code>
                   </div>
-                ) : (
-                  <>
-                    <div className="visual-grid">
-                      {project.architecture.map((item) => <span key={item}>{item}</span>)}
+                  <h3 className="project-image-title">{project.title}</h3>
+                  {project.image ? (
+                    <div className="project-image-wrap">
+                      <Image
+                        src={project.image}
+                        alt={`${project.title} project screenshot`}
+                        fill
+                        sizes="(max-width: 980px) 100vw, 40vw"
+                      />
                     </div>
-                    <div className="visual-signal" aria-hidden="true">
-                      <span />
-                      <span />
-                      <span />
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className="project-copy">
-                <p className="eyebrow">{project.accent}</p>
-                <p>{project.label}</p>
-                <div className="project-stack-preview" aria-label={`${project.title} tech stack preview`}>
-                  {project.stack.slice(0, 6).map((item) => (
-                    <span key={item}>{item}</span>
-                  ))}
+                  ) : (
+                    <>
+                      <div className="visual-grid">
+                        {project.architecture.map((item) => <span key={item}>{item}</span>)}
+                      </div>
+                      <div className="visual-signal" aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                    </>
+                  )}
                 </div>
-                <ul className="project-feature-preview">
-                  {project.features.slice(0, 3).map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-                <div className="project-card-actions">
-                  <MagneticButton onClick={() => openProject(project)} variant="secondary">Details</MagneticButton>
-                  <MagneticButton href={project.live} variant="ghost">Live <ArrowUpRight size={14} /></MagneticButton>
-                  <MagneticButton href={project.github} variant="ghost">GitHub <Github size={14} /></MagneticButton>
+                <div className="project-copy">
+                  <p className="project-outcome">{project.label}</p>
+                  <div className="project-stack-preview" aria-label={`${project.title} tech stack preview`}>
+                    {project.stack.slice(0, 4).map((item) => (
+                      <span key={item}>{item}</span>
+                    ))}
+                    {project.stack.length > 4 ? (
+                      <span className="project-stack-more">+{project.stack.length - 4}</span>
+                    ) : null}
+                  </div>
+                  <ul className="project-feature-preview">
+                    {project.features.slice(0, 3).map((feature) => (
+                      <li key={feature}>{feature}</li>
+                    ))}
+                  </ul>
+                  <div className="project-card-actions">
+                    <MagneticButton onClick={() => openProject(project)} variant="secondary">Details</MagneticButton>
+                    <MagneticButton href={project.live} variant="ghost">Live <ArrowUpRight size={14} /></MagneticButton>
+                    <MagneticButton href={project.github} variant="ghost">GitHub <Github size={14} /></MagneticButton>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
-              <aside className="project-reel-end" aria-label="Project reel call to action">
-                <span>Next build</span>
-                <strong>Have an idea worth shipping?</strong>
-                <p>Bring the messy first version. I&apos;ll help turn it into a product users can try.</p>
-                <MagneticButton href={scheduleUrl}>Schedule call <CalendarDays size={16} /></MagneticButton>
-              </aside>
+              </article>
             </div>
-          </div>
+          ))}
         </div>
-        <div className="project-scroll-hint section-shell" aria-hidden="true">
-          <span>Vertical scroll drives the reel</span>
-          <i />
+        <div className="projects-stack-footer section-shell">
+          <aside className="project-stack-end project-reel-end" aria-label="Project stack call to action">
+            <span>Next build</span>
+            <strong>Have an idea worth shipping?</strong>
+            <p>Bring the messy first version. I&apos;ll help turn it into a product users can try.</p>
+            <MagneticButton href={scheduleUrl}>Schedule call <CalendarDays size={16} /></MagneticButton>
+          </aside>
         </div>
       </section>
 
@@ -1010,34 +741,48 @@ export default function Portfolio() {
       <section id="experience" className="experience section-shell">
         <div className="section-intro">
           <p className="eyebrow">Experience</p>
-          <h2><span className="mask"><span className="reveal">Security-aware systems thinking, now applied to full-stack AI products.</span></span></h2>
+          <h2><span className="mask"><span className="reveal">A short timeline of my experience.</span></span></h2>
         </div>
-        <div className="timeline">
-          <article>
-            <span>July 2022 - September 2023</span>
-            <h3>Cybersecurity Analyst · Microland Ltd</h3>
-            <p>Reduced false-positive SOC alerts by 25% through SIEM tuning across Securonix, Microsoft Defender, and AlienVault.</p>
-            <p>Led log analysis and incident response work that reduced MTTD/MTTR by 20%.</p>
-            <p>Used Qualys vulnerability data to prioritize high-impact security gaps and strengthen posture.</p>
-          </article>
-          <article>
-            <span>May 2021 - July 2021</span>
-            <h3>Software Engineer Intern · TheFlak Group / APRIC</h3>
-            <p>Designed scalable components, data models, and MVP feature flows for Flakmart.</p>
-            <p>Built a geospatial web module and Python ML model for CRM segmentation.</p>
-            <p>Developed an interactive React chatbot to reduce manual query load.</p>
-          </article>
-        </div>
+        <ol className="timeline" aria-label="Professional experience">
+          <li className="timeline-item">
+            <span className="timeline-marker" aria-hidden="true" />
+            <div className="timeline-content">
+              <time dateTime="2022-07/2023-09">July 2022 — September 2023</time>
+              <h3>Cybersecurity Engineer <span>· Microland Ltd</span></h3>
+              <p>Strengthened security operations by improving alert quality, accelerating incident response, and advancing vulnerability management to prioritize critical risks.</p>
+            </div>
+          </li>
+          <li className="timeline-item">
+            <span className="timeline-marker" aria-hidden="true" />
+            <div className="timeline-content">
+              <time dateTime="2021-05/2021-07">May 2021 — July 2021</time>
+              <h3>Software Engineer <span>· TheFlak Group / APRIC</span></h3>
+              <p>Built product features across web, data, and conversational AI, including a geospatial module, CRM segmentation model, and React chatbot.</p>
+            </div>
+          </li>
+        </ol>
         <div className="education">
-          <h3>Education</h3>
-          <div>
-            <strong>Amity University</strong>
-            <span>B.Tech Computer Science Engineering · GGPA 8.03 · 2018-2022</span>
+          <div className="education-heading">
+            <h3>Educational Background</h3>
           </div>
-          <div>
-            <strong>Scaler Academy</strong>
-            <span>Software Engineering specialization, Full-stack Development, System Design & Product Management · 2025-2026</span>
-          </div>
+          <ol className="timeline education-timeline" aria-label="Education">
+            <li className="timeline-item">
+              <span className="timeline-marker" aria-hidden="true" />
+              <div className="timeline-content">
+                <time dateTime="2022">2022</time>
+                <h3>Bachelor of Technology in Computer Science and Engineering</h3>
+                <p>Amity University</p>
+              </div>
+            </li>
+            <li className="timeline-item">
+              <span className="timeline-marker" aria-hidden="true" />
+              <div className="timeline-content">
+                <time dateTime="2025">2025</time>
+                <h3>Full-stack Development · AI Engineering · System Design · Product Management</h3>
+                <p>Scaler Academy</p>
+              </div>
+            </li>
+          </ol>
         </div>
       </section>
 
@@ -1047,8 +792,8 @@ export default function Portfolio() {
           <h2><span className="mask"><span className="reveal">Applied ML credibility beyond product interfaces.</span></span></h2>
         </div>
         <article className="research-card">
-          <span>Published · 2022</span>
-          <h3>Solving Handwritten Equations Using Convolutional Neural Network</h3>
+          <span>Published · 2023</span>
+          <h3><a href="https://pubs.aip.org/aip/acp/article-abstract/2771/1/020014/2908769/Solving-handwritten-equations-using-convolutional?redirectedFrom=fulltext" target="_blank" rel="noreferrer">Solving Handwritten Equations Using Convolutional Neural Network</a></h3>
           <p>Published in IDVRP Conference Journal. A compact signal of early AI/ML work with computer vision and model-driven problem solving.</p>
         </article>
       </section>
@@ -1070,11 +815,11 @@ export default function Portfolio() {
 
       <section id="contact" className="footer section-shell">
         <div className="telemetry-panel">
-          <span className="online-dot" />
-          <div><small>Status</small><strong>Online</strong></div>
-          <div><small>Active now</small><strong>{stats.active}</strong></div>
-          <div><small>Total visits</small><strong>{stats.visits}</strong></div>
-          <div><small>Top project</small><strong>{stats.topProject}</strong></div>
+          <div>
+            <small>Active now</small>
+            <strong><span className="online-dot" aria-hidden="true" />{stats.active}</strong>
+          </div>
+          <div><small>Visits in the last 30 days</small><strong>{stats.visits}</strong></div>
         </div>
         <div>
           <h2>Let&apos;s build something precise.</h2>
